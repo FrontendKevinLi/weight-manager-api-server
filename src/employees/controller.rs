@@ -1,11 +1,12 @@
 use super::service;
 use super::{Employee, InsertEmployee};
-use crate::{AppState, StandardResponse};
+use crate::response;
+use crate::AppState;
 use axum::extract::Path;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::routing::{get, put};
 use axum::routing::post;
+use axum::routing::{get, put};
 use axum::Json;
 use axum::Router;
 use axum_macros;
@@ -21,10 +22,10 @@ pub fn employees_router() -> Router<AppState> {
 #[axum_macros::debug_handler]
 async fn get_employees(
     State(app_state): State<AppState>,
-) -> Result<axum::Json<StandardResponse<Vec<Employee>>>, StatusCode> {
+) -> Result<Json<Vec<Employee>>, StatusCode> {
     match service::fetch_employees(&app_state.pool).await {
-        Ok(value) => Ok(StandardResponse::success(value)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(value) => Ok(Json(value)),
+        Err(_) => Err(response::failed()),
     }
 }
 
@@ -32,12 +33,12 @@ async fn get_employees(
 async fn get_employee_by_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<i64>,
-) -> Result<axum::Json<StandardResponse<Option<Employee>>>, StatusCode> {
+) -> Result<Json<Option<Employee>>, (StatusCode, String)> {
     match service::fetch_employee_by_id(&app_state.pool, user_id).await {
-        Ok(value) => Ok(StandardResponse::success(Option::from(value))),
+        Ok(value) => Ok(response::success(Option::from(value))),
         Err(err) => match err {
-            sqlx::Error::RowNotFound => Ok(StandardResponse::success(Option::None)),
-            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+            sqlx::Error::RowNotFound => Ok(response::success(None)),
+            err => Err(response::failed_with_message(err.to_string())),
         },
     }
 }
@@ -46,10 +47,10 @@ async fn get_employee_by_id(
 async fn insert_employee(
     State(app_state): State<AppState>,
     Json(employee): Json<InsertEmployee>,
-) -> Result<axum::Json<StandardResponse<u64>>, StatusCode> {
+) -> Result<Json<u64>, StatusCode> {
     match service::insert_employee(&app_state.pool, employee).await {
-        Ok(value) => Ok(StandardResponse::success(value)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR)
+        Ok(value) => Ok(response::success(value)),
+        Err(_) => Err(response::failed()),
     }
 }
 
@@ -57,10 +58,10 @@ async fn insert_employee(
 async fn put_employee_by_id(
     Path(user_id): Path<i64>,
     State(app_state): State<AppState>,
-    Json(employee): Json<InsertEmployee>
-) -> Result<Json<StandardResponse<u64>>, StatusCode> {
+    Json(employee): Json<InsertEmployee>,
+) -> Result<Json<u64>, StatusCode> {
     match service::put_employee(&app_state.pool, employee, user_id).await {
-        Ok(value) => Ok(StandardResponse::success(value)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR)
+        Ok(value) => Ok(response::success(value)),
+        Err(_) => Err(response::failed()),
     }
 }

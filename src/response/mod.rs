@@ -1,23 +1,18 @@
+use axum::http::StatusCode;
+use axum::Json;
 use serde::Serialize;
 
-#[derive(Serialize)]
-pub struct StandardResponse<TData> {
-    pub message: String,
-    pub data: TData,
+pub fn success<TData: Serialize>(data: TData) -> Json<TData> {
+    Json(data)
 }
 
-impl<TData> StandardResponse<TData> {
-    pub fn success(data: TData) -> axum::Json<StandardResponse<TData>> {
-        axum::Json(StandardResponse {
-            message: String::from("success"),
-            data,
-        })
-    }
+pub fn failed() -> StatusCode {
+    StatusCode::INTERNAL_SERVER_ERROR
+}
+pub fn failed_with_message(message: String) -> (StatusCode, String) {
+    (StatusCode::INTERNAL_SERVER_ERROR, message)
+}
 
-    pub fn failed(err: sqlx::Error, data: TData) -> axum::Json<StandardResponse<TData>> {
-        axum::Json(StandardResponse {
-            message: err.to_string(),
-            data,
-        })
-    }
+pub fn failed_with_code(message: String, status_code: StatusCode) -> (StatusCode, String) {
+    (status_code, message)
 }
