@@ -12,3 +12,13 @@ pub struct Employee {
     pub job_title: Option<String>,
     pub salary: Option<rust_decimal::Decimal>,
 }
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct InsertEmployee {
+    pub first_name: String,
+    pub last_name: String,
+    pub email: Option<String>,
+    pub hire_date: Option<Date>,
+    pub job_title: Option<String>,
+    pub salary: Option<rust_decimal::Decimal>,
+}

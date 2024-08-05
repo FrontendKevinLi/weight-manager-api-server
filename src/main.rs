@@ -1,12 +1,12 @@
-use axum::{extract::State, routing::get, Router};
 use axum::http::StatusCode;
+use axum::{extract::State, routing::get, Router};
 use axum_macros;
 use dotenv::dotenv;
 use serde;
 use serde::Serialize;
 use sqlx::mysql::MySql;
 use sqlx::mysql::MySqlPoolOptions;
-use sqlx::pool::{Pool};
+use sqlx::pool::Pool;
 use tokio::net::TcpListener;
 
 pub mod employees;
@@ -65,7 +65,9 @@ async fn main() {
 }
 
 #[axum_macros::debug_handler]
-async fn default_controller(State(app_state): State<AppState>) -> axum::Json<StandardResponse<i64>> {
+async fn default_controller(
+    State(app_state): State<AppState>,
+) -> axum::Json<StandardResponse<i64>> {
     match default_service(&app_state.pool).await {
         Ok(value) => StandardResponse::success(value),
         Err(err) => StandardResponse::failed(err, 0),
@@ -87,7 +89,6 @@ async fn error_controller() -> Result<String, (StatusCode, String)> {
     Err(internal_error(&String::from("Test Error")))
 }
 
-fn internal_error(err: &str) -> (StatusCode, String)
-{
+fn internal_error(err: &str) -> (StatusCode, String) {
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
