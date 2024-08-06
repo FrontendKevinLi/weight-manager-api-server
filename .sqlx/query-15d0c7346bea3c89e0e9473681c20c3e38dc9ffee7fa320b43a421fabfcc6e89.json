@@ -1,0 +1,54 @@
+{
+  "db_name": "MySQL",
+  "query": "\n        SELECT id, username, create_time, update_time FROM user\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "create_time",
+        "type_info": {
+          "type": "Timestamp",
+          "flags": "NOT_NULL | BINARY | TIMESTAMP",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "update_time",
+        "type_info": {
+          "type": "Timestamp",
+          "flags": "NOT_NULL | BINARY | TIMESTAMP | ON_UPDATE_NOW",
+          "max_size": 19
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "15d0c7346bea3c89e0e9473681c20c3e38dc9ffee7fa320b43a421fabfcc6e89"
+}

@@ -2,7 +2,7 @@ mod controller;
 mod service;
 
 pub use controller::generate_router;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use time::OffsetDateTime;
 
@@ -12,4 +12,9 @@ pub struct User {
     username: String,
     create_time: OffsetDateTime,
     update_time: OffsetDateTime,
+}
+
+#[derive(Deserialize)]
+pub struct CreateUser {
+    username: String,
 }
