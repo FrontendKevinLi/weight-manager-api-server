@@ -16,10 +16,8 @@ use tower_http::trace::TraceLayer;
 use tracing::info_span;
 use tracing::Span;
 
-pub mod employees;
 pub mod response;
 pub mod user;
-use crate::employees::controller::employees_router;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
@@ -56,7 +54,6 @@ async fn main() {
     let app_state = AppState { pool };
 
     let app = Router::new()
-        .nest("/employees", employees_router())
         .nest("/users", user::generate_router())
         .with_state(app_state)
         .layer(
