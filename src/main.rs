@@ -18,6 +18,7 @@ use tracing::Span;
 
 pub mod employees;
 pub mod response;
+pub mod user;
 use crate::employees::controller::employees_router;
 
 #[derive(Clone, Debug)]
@@ -56,6 +57,7 @@ async fn main() {
 
     let app = Router::new()
         .nest("/employees", employees_router())
+        .nest("/users", user::generate_router())
         .with_state(app_state)
         .layer(
             TraceLayer::new_for_http()

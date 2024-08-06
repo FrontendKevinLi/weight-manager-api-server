@@ -29,17 +29,21 @@ pub async fn insert_employee(
     pool: &Pool<MySql>,
     employee: InsertEmployee,
 ) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(
-        "INSERT INTO employees (first_name, last_name, email, hire_date, job_title, salary) VALUES (?, ? ,? ,? ,? ,?);",
+    let result = sqlx::query!(
+        "
+        INSERT INTO employees (first_name, last_name, email, hire_date, job_title, salary) 
+        VALUES (?, ? ,? ,? ,? ,?)
+        ;
+        ",
+        employee.first_name,
+        employee.last_name,
+        employee.email,
+        employee.hire_date,
+        employee.job_title,
+        employee.salary,
     )
-        .bind(employee.first_name)
-        .bind(employee.last_name)
-        .bind(employee.email)
-        .bind(employee.hire_date)
-        .bind(employee.job_title)
-        .bind(employee.salary)
-        .execute(pool)
-        .await?;
+    .execute(pool)
+    .await?;
 
     Ok(result.last_insert_id())
 }
@@ -49,20 +53,21 @@ pub async fn put_employee(
     employee: InsertEmployee,
     user_id: i64,
 ) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "
-            UPDATE todos.employees 
-            SET first_name = ?, last_name = ?, email = ?, hire_date = ?, job_title = ?, salary = ?
-            WHERE employee_id = ?
-            ;",
+        UPDATE todos.employees 
+        SET first_name = ?, last_name = ?, email = ?, hire_date = ?, job_title = ?, salary = ?
+        WHERE employee_id = ?
+        ;
+        ",
+        employee.first_name,
+        employee.last_name,
+        employee.email,
+        employee.hire_date,
+        employee.job_title,
+        employee.salary,
+        user_id
     )
-    .bind(employee.first_name)
-    .bind(employee.last_name)
-    .bind(employee.email)
-    .bind(employee.hire_date)
-    .bind(employee.job_title)
-    .bind(employee.salary)
-    .bind(user_id)
     .execute(pool)
     .await?;
 
