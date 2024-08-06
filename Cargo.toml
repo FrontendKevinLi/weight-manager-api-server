@@ -6,17 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["macros"] }
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-axum-macros = { version = "0.4.1" }
 sqlx = { version = "0.8.0", features = [
-    "runtime-tokio-rustls",
-    "any",
-    "mysql",
-    "time",
-    "rust_decimal",
+  "runtime-tokio-rustls",
+  "any",
+  "mysql",
+  "time",
+  "rust_decimal",
 ] }
 serde = { version = "1.0.204" }
 rust_decimal = { version = "1.35.0", features = ["serde"] }

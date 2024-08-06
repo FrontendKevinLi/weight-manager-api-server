@@ -9,7 +9,6 @@ use axum::routing::post;
 use axum::routing::{get, put};
 use axum::Json;
 use axum::Router;
-use axum_macros;
 
 pub fn employees_router() -> Router<AppState> {
     Router::new()
@@ -19,7 +18,7 @@ pub fn employees_router() -> Router<AppState> {
         .route("/:user_id", put(put_employee_by_id))
 }
 
-#[axum_macros::debug_handler]
+#[axum::debug_handler]
 async fn get_employees(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Employee>>, StatusCode> {
@@ -29,7 +28,7 @@ async fn get_employees(
     }
 }
 
-#[axum_macros::debug_handler]
+#[axum::debug_handler]
 async fn get_employee_by_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<i64>,
@@ -43,7 +42,7 @@ async fn get_employee_by_id(
     }
 }
 
-#[axum_macros::debug_handler]
+#[axum::debug_handler]
 async fn insert_employee(
     State(app_state): State<AppState>,
     Json(employee): Json<InsertEmployee>,
@@ -54,7 +53,7 @@ async fn insert_employee(
     }
 }
 
-#[axum_macros::debug_handler]
+#[axum::debug_handler]
 async fn put_employee_by_id(
     Path(user_id): Path<i64>,
     State(app_state): State<AppState>,
