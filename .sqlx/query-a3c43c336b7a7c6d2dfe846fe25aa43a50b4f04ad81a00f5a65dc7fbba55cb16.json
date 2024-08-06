@@ -1,0 +1,84 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT employee_id, first_name, last_name, job_title, email, hire_date, salary FROM employees WHERE employee_id =?;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "employee_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "first_name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 200
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "last_name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 200
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "job_title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 200
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "email",
+        "type_info": {
+          "type": "VarString",
+          "flags": "UNIQUE_KEY",
+          "max_size": 400
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "hire_date",
+        "type_info": {
+          "type": "Date",
+          "flags": "BINARY",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "salary",
+        "type_info": {
+          "type": "NewDecimal",
+          "flags": "",
+          "max_size": 12
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "a3c43c336b7a7c6d2dfe846fe25aa43a50b4f04ad81a00f5a65dc7fbba55cb16"
+}
