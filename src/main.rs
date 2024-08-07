@@ -16,8 +16,10 @@ use tower_http::trace::TraceLayer;
 use tracing::info_span;
 use tracing::Span;
 
-pub mod response;
-pub mod user;
+mod response;
+mod user;
+mod user_weight_record;
+mod weight_record;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
@@ -55,6 +57,11 @@ async fn main() {
 
     let app = Router::new()
         .nest("/users", user::generate_router())
+        .nest("/weight-records", weight_record::generate_router())
+        .nest(
+            "/user-weight-records",
+            user_weight_record::generate_router(),
+        )
         .with_state(app_state)
         .layer(
             TraceLayer::new_for_http()
