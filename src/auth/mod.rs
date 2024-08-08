@@ -47,7 +47,7 @@ where
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
-        state: &S,
+        _state: &S,
     ) -> Result<Self, Self::Rejection> {
         let header = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
@@ -84,12 +84,16 @@ static KEYS: Lazy<Keys> = Lazy::new(|| {
 
 pub enum AuthError {
     InvalidToken,
+    MissingCredentials,
+    TokenCreation,
 }
 
 impl IntoResponse for AuthError {
     fn into_response(self) -> axum::response::Response {
         let status_code = match self {
-            Self::InvalidToken => StatusCode::UNAUTHORIZED,
+            Self::InvalidToken => (StatusCode::UNAUTHORIZED, "Incorrect credentials"),
+            Self::MissingCredentials => (StatusCode::BAD_REQUEST, "Missing credentials"),
+            Self::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
         };
 
         (status_code).into_response()

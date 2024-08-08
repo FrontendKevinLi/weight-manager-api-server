@@ -2,9 +2,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::AppState;
 use axum::routing::{get, post};
-use axum::{http::StatusCode, Json, Router};
+use axum::{Json, Router};
 
-use super::{AuthBody, AuthPayload, Claims, KEYS};
+use super::{AuthBody, AuthError, AuthPayload, Claims, KEYS};
 
 pub fn generate_router() -> Router<AppState> {
     Router::new()
@@ -13,13 +13,9 @@ pub fn generate_router() -> Router<AppState> {
 }
 
 #[axum::debug_handler]
-pub async fn login_handler(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody>, StatusCode> {
-    if payload.email.is_empty() {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-
-    if payload.password.is_empty() {
-        return Err(StatusCode::BAD_REQUEST);
+pub async fn login_handler(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody>, AuthError> {
+    if payload.email.is_empty() || payload.password.is_empty() {
+        return Err(AuthError::MissingCredentials);
     }
 
     // TODO: add email and password database validation
@@ -35,12 +31,12 @@ pub async fn login_handler(Json(payload): Json<AuthPayload>) -> Result<Json<Auth
     };
 
     let token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claims, &KEYS.encoding)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| AuthError::TokenCreation)?;
 
     Ok(Json(AuthBody::new(token)))
 }
 
 #[axum::debug_handler]
-pub async fn protected_handler(claims: Claims) -> Result<Json<String>, StatusCode> {
+pub async fn protected_handler(claims: Claims) -> Result<Json<String>, AuthError> {
     Ok(Json(format!("Hello, {}!", claims.email)))
 }
