@@ -9,6 +9,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
 mod controller;
+mod service;
 pub use controller::generate_router;
 
 #[derive(Serialize)]
@@ -35,7 +36,7 @@ pub struct AuthPayload {
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
     email: String,
-    exp: u128,
+    exp: u64,
 }
 
 #[async_trait]
@@ -86,6 +87,7 @@ pub enum AuthError {
     InvalidToken,
     MissingCredentials,
     TokenCreation,
+    IncorrectCredentials,
 }
 
 impl IntoResponse for AuthError {
@@ -94,6 +96,7 @@ impl IntoResponse for AuthError {
             Self::InvalidToken => (StatusCode::UNAUTHORIZED, "Incorrect credentials"),
             Self::MissingCredentials => (StatusCode::BAD_REQUEST, "Missing credentials"),
             Self::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
+            Self::IncorrectCredentials => (StatusCode::BAD_REQUEST, "Incorrect credentials"),
         };
 
         (status_code).into_response()

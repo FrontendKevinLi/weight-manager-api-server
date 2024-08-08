@@ -1,10 +1,9 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use crate::AppState;
+use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 
-use super::{AuthBody, AuthError, AuthPayload, Claims, KEYS};
+use super::{service, AuthBody, AuthError, AuthPayload, Claims, KEYS};
 
 pub fn generate_router() -> Router<AppState> {
     Router::new()
@@ -13,21 +12,21 @@ pub fn generate_router() -> Router<AppState> {
 }
 
 #[axum::debug_handler]
-pub async fn login_handler(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody>, AuthError> {
+pub async fn login_handler(
+    State(app_state): State<AppState>,
+    Json(payload): Json<AuthPayload>,
+) -> Result<Json<AuthBody>, AuthError> {
     if payload.email.is_empty() || payload.password.is_empty() {
         return Err(AuthError::MissingCredentials);
     }
 
-    // TODO: add email and password database validation
-
-    // TODO: change to internal server error
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time must be present!");
+    service::verify_user(&app_state.pool, &payload)
+        .await
+        .map_err(|_| AuthError::IncorrectCredentials)?;
 
     let claims = Claims {
         email: payload.email,
-        exp: now.as_millis(),
+        exp: jsonwebtoken::get_current_timestamp() + 3600 * 1000,
     };
 
     let token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claims, &KEYS.encoding)

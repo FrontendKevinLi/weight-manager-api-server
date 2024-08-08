@@ -9,7 +9,7 @@ pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
     let users = sqlx::query_as!(
         User,
         "
-        SELECT id, username, create_time, update_time FROM user
+        SELECT id, username, email, create_time, update_time FROM user
         ;
         "
     )
@@ -23,7 +23,7 @@ pub async fn fetch_users_by_id(pool: &Pool<MySql>, id: i64) -> Result<User, sqlx
     let user = sqlx::query_as!(
         User,
         "
-        SELECT id, username, create_time, update_time FROM user
+        SELECT id, username, email, create_time, update_time FROM user
         WHERE id = ?
         ",
         id
@@ -35,9 +35,13 @@ pub async fn fetch_users_by_id(pool: &Pool<MySql>, id: i64) -> Result<User, sqlx
 }
 
 pub async fn insert_user(pool: &Pool<MySql>, user: CreateUser) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query!("INSERT INTO user (username) VALUES (?)", user.username)
-        .execute(pool)
-        .await?;
+    let result = sqlx::query!(
+        "INSERT INTO user (username, email) VALUES (?, ?)",
+        user.username,
+        user.email
+    )
+    .execute(pool)
+    .await?;
 
     Ok(result.last_insert_id())
 }
@@ -48,8 +52,13 @@ pub async fn update_user(
     id: u64,
 ) -> Result<u64, sqlx::Error> {
     let result = sqlx::query!(
-        "UPDATE user SET username = ? WHERE id = ?",
+        "
+        UPDATE user 
+        SET username = ?, email = ?
+        WHERE id = ?
+        ",
         user.username,
+        user.email,
         id
     )
     .execute(pool)
