@@ -3,7 +3,6 @@ use crate::weight_record;
 use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
 use super::{CreateUser, User};
-use axum::{http::StatusCode, Json};
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
