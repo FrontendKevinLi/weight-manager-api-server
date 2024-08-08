@@ -1,13 +1,15 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::AppState;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{http::StatusCode, Json, Router};
 
 use super::{AuthBody, AuthPayload, Claims, KEYS};
 
 pub fn generate_router() -> Router<AppState> {
-    Router::new().route("/login", post(login_handler))
+    Router::new()
+        .route("/login", post(login_handler))
+        .route("/protected", get(protected_handler))
 }
 
 #[axum::debug_handler]
@@ -36,4 +38,9 @@ pub async fn login_handler(Json(payload): Json<AuthPayload>) -> Result<Json<Auth
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(AuthBody::new(token)))
+}
+
+#[axum::debug_handler]
+pub async fn protected_handler(claims: Claims) -> Result<Json<String>, StatusCode> {
+    Ok(Json(format!("Hello, {}!", claims.email)))
 }
