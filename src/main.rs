@@ -16,6 +16,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info_span;
 use tracing::Span;
 
+mod auth;
 mod response;
 mod user;
 mod user_weight_record;
@@ -56,6 +57,7 @@ async fn main() {
     let app_state = AppState { pool };
 
     let app = Router::new()
+        .nest("/auth", auth::generate_router())
         .nest("/users", user::generate_router())
         .nest("/weight-records", weight_record::generate_router())
         .nest(
