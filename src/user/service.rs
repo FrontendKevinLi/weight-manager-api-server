@@ -2,7 +2,7 @@ use crate::user_weight_record::UserWeightRecord;
 use crate::weight_record;
 use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
-use super::{CreateUser, User};
+use super::{CreateUser, DateRange, User};
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
@@ -70,6 +70,7 @@ pub async fn update_user(
 pub async fn fetch_weight_record_by_user_id(
     pool: &Pool<MySql>,
     user_id: u64,
+    date_range: DateRange,
 ) -> Result<Vec<UserWeightRecord>, sqlx::Error> {
     let records = sqlx::query_as!(
         UserWeightRecord,
@@ -84,8 +85,11 @@ pub async fn fetch_weight_record_by_user_id(
         join user on user_weight_record.user_id = user.id
         join weight_record on user_weight_record.weight_record_id = weight_record.id
         where user_weight_record.user_id = ?
+        and weight_record.date between ? and ?
         ",
-        user_id
+        user_id,
+        date_range.start_date,
+        date_range.end_date
     )
     .fetch_all(pool)
     .await?;
