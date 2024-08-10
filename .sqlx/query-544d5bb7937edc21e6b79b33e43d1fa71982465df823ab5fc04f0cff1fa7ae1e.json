@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n        insert into user_weight_record (user_id, weight_record_id)\n        values (?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "544d5bb7937edc21e6b79b33e43d1fa71982465df823ab5fc04f0cff1fa7ae1e"
+}

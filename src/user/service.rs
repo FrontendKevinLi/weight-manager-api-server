@@ -2,14 +2,14 @@ use crate::user_weight_record::UserWeightRecord;
 use crate::weight_record;
 use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
-use super::{CreateUser, User};
+use super::{CreateUser, DateRange, User};
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
     let users = sqlx::query_as!(
         User,
         "
-        SELECT id, username, create_time, update_time FROM user
+        SELECT id, username, email, create_time, update_time FROM user
         ;
         "
     )
@@ -23,7 +23,7 @@ pub async fn fetch_users_by_id(pool: &Pool<MySql>, id: i64) -> Result<User, sqlx
     let user = sqlx::query_as!(
         User,
         "
-        SELECT id, username, create_time, update_time FROM user
+        SELECT id, username, email, create_time, update_time FROM user
         WHERE id = ?
         ",
         id
@@ -35,9 +35,13 @@ pub async fn fetch_users_by_id(pool: &Pool<MySql>, id: i64) -> Result<User, sqlx
 }
 
 pub async fn insert_user(pool: &Pool<MySql>, user: CreateUser) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query!("INSERT INTO user (username) VALUES (?)", user.username)
-        .execute(pool)
-        .await?;
+    let result = sqlx::query!(
+        "INSERT INTO user (username, email) VALUES (?, ?)",
+        user.username,
+        user.email
+    )
+    .execute(pool)
+    .await?;
 
     Ok(result.last_insert_id())
 }
@@ -48,8 +52,13 @@ pub async fn update_user(
     id: u64,
 ) -> Result<u64, sqlx::Error> {
     let result = sqlx::query!(
-        "UPDATE user SET username = ? WHERE id = ?",
+        "
+        UPDATE user 
+        SET username = ?, email = ?
+        WHERE id = ?
+        ",
         user.username,
+        user.email,
         id
     )
     .execute(pool)
@@ -61,6 +70,7 @@ pub async fn update_user(
 pub async fn fetch_weight_record_by_user_id(
     pool: &Pool<MySql>,
     user_id: u64,
+    date_range: DateRange,
 ) -> Result<Vec<UserWeightRecord>, sqlx::Error> {
     let records = sqlx::query_as!(
         UserWeightRecord,
@@ -75,8 +85,11 @@ pub async fn fetch_weight_record_by_user_id(
         join user on user_weight_record.user_id = user.id
         join weight_record on user_weight_record.weight_record_id = weight_record.id
         where user_weight_record.user_id = ?
+        and weight_record.date between ? and ?
         ",
-        user_id
+        user_id,
+        date_range.start_date,
+        date_range.end_date
     )
     .fetch_all(pool)
     .await?;

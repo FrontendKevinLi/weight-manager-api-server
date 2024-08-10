@@ -1,4 +1,5 @@
 use axum::extract::Path;
+use axum::extract::Query;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::routing::{get, post, put};
@@ -12,6 +13,7 @@ use crate::AppState;
 
 use super::service;
 use super::CreateUser;
+use super::DateRange;
 use super::User;
 
 pub fn generate_router() -> Router<AppState> {
@@ -72,8 +74,12 @@ async fn update_user(
 async fn get_weight_record_by_user_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<u64>,
+    date_range: Option<Query<DateRange>>,
 ) -> Result<Json<Vec<UserWeightRecord>>, StatusCode> {
-    match service::fetch_weight_record_by_user_id(&app_state.pool, user_id).await {
+    let Query(date_range) = date_range.unwrap_or_default();
+    dbg!(&date_range);
+
+    match service::fetch_weight_record_by_user_id(&app_state.pool, user_id, date_range).await {
         Ok(records) => Ok(response::success(records)),
         Err(_) => Err(response::failed()),
     }

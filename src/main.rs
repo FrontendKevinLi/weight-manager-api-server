@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::time::Duration;
 
 use axum::body::Bytes;
@@ -8,14 +9,18 @@ use axum::response::Response;
 use axum::Router;
 use dotenv::dotenv;
 use sqlx::mysql::MySql;
+use sqlx::mysql::MySqlConnectOptions;
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::pool::Pool;
+use sqlx::ConnectOptions;
 use tokio::net::TcpListener;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::trace::TraceLayer;
+use tracing::debug_span;
 use tracing::info_span;
 use tracing::Span;
 
+mod auth;
 mod response;
 mod user;
 mod user_weight_record;
@@ -34,28 +39,23 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    // tracing_subscriber::registry()
-    //     .with(
-    //         tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-    //             // axum logs rejections from built-in extractors with the `axum::rejection`
-    //             // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-    //             "weight-manager-api-server=debug,tower_http=debug,axum::rejection=trace".into()
-    //         }),
-    //     )
-    //     .with(tracing_subscriber::fmt::layer())
-    //     .init();
-
     let database_url = std::env::var("DATABASE_URL").expect("Database url should be present!");
+
+    let connection_options = MySqlConnectOptions::from_str(&database_url)
+        .unwrap_or_else(|err| panic!("Failed to connect to database: {}", err))
+        .log_statements(log::LevelFilter::Debug)
+        .log_slow_statements(log::LevelFilter::Debug, Duration::from_secs(1));
 
     let pool = MySqlPoolOptions::new()
         .max_connections(5)
-        .connect(&database_url)
+        .connect_with(connection_options)
         .await
         .unwrap_or_else(|err| panic!("Failed to connect to database: {}", err));
 
     let app_state = AppState { pool };
 
     let app = Router::new()
+        .nest("/auth", auth::generate_router())
         .nest("/users", user::generate_router())
         .nest("/weight-records", weight_record::generate_router())
         .nest(
@@ -76,8 +76,7 @@ async fn main() {
                     info_span!(
                         "http_request",
                         method = ?request.method(),
-                        matched_path,
-                        some_other_field = tracing::field::Empty,
+                        matched_path
                     )
                 })
                 .on_request(|_request: &Request<_>, _span: &Span| {
