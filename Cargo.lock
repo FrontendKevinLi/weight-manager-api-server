@@ -71,6 +71,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "argon2"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c3610892ee6e0cbce8ae2700349fcf8f98adb0dbfbee85aec3c9179d29cc072"
+dependencies = [
+ "base64ct",
+ "blake2",
+ "cpufeatures",
+ "password-hash",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -251,6 +263,15 @@ dependencies = [
  "radium",
  "tap",
  "wyz",
+]
+
+[[package]]
+name = "blake2"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46502ad458c9a52b69d4d4d32775c788b7a1b85e8bc9d482d92250fc0e3f8efe"
+dependencies = [
+ "digest",
 ]
 
 [[package]]
@@ -1164,6 +1185,17 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "password-hash"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "346f04948ba92c43e8469c1ee6736c7563d71012b17d40745260fe106aac2166"
+dependencies = [
+ "base64ct",
+ "rand_core",
+ "subtle",
 ]
 
 [[package]]
@@ -2458,6 +2490,7 @@ checksum = "5f20c57d8d7db6d3b86154206ae5d8fba62dd39573114de97c2cb0578251f8e1"
 name = "weight-manager-api-server"
 version = "0.1.0"
 dependencies = [
+ "argon2",
  "axum",
  "axum-extra",
  "chrono",
@@ -2465,6 +2498,7 @@ dependencies = [
  "jsonwebtoken",
  "log",
  "once_cell",
+ "rand",
  "rust_decimal",
  "serde",
  "sqlx",

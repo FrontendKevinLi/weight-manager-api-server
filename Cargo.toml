@@ -26,4 +26,6 @@ jsonwebtoken = { version = "9.3.0" }
 axum-extra = { version = "0.9.3", features = ["typed-header"] }
 once_cell = { version = "1.19.0" }
 chrono = { version = "0.4.38" }
-log = {version = "0.4.22"}
+log = { version = "0.4.22" }
+argon2 = { version = "0.5.3" }
+rand = { version = "0.8.5" }

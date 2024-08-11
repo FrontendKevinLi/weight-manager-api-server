@@ -3,6 +3,8 @@ use crate::weight_record;
 use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
 use super::{CreateUser, DateRange, User};
+use crate::password_util;
+use argon2::{Argon2, PasswordHasher};
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
@@ -34,11 +36,31 @@ pub async fn fetch_users_by_id(pool: &Pool<MySql>, id: i64) -> Result<User, sqlx
     Ok(user)
 }
 
-pub async fn insert_user(pool: &Pool<MySql>, user: CreateUser) -> Result<u64, sqlx::Error> {
+pub async fn is_user_exist(pool: &Pool<MySql>, email: &str) -> Result<bool, sqlx::Error> {
+    let is_exist_record = sqlx::query!(
+        "SELECT EXISTS(SELECT 1 FROM user WHERE user.email = ?) as is_exist",
+        email
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(is_exist_record.is_exist == 1)
+}
+
+pub async fn insert_user(
+    pool: &Pool<MySql>,
+    argon2_context: &argon2::Argon2<'static>,
+    user: CreateUser,
+) -> Result<u64, sqlx::Error> {
+    //TODO: Change to a correct error
+    let hashed_password = password_util::hash(&argon2_context, &user.password)
+        .map_err(|_| sqlx::Error::RowNotFound)?;
+
     let result = sqlx::query!(
-        "INSERT INTO user (username, email) VALUES (?, ?)",
+        "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
         user.username,
-        user.email
+        user.email,
+        hashed_password
     )
     .execute(pool)
     .await?;

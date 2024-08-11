@@ -52,10 +52,23 @@ async fn get_user_by_id(
 async fn create_user(
     State(app_state): State<AppState>,
     Json(user): Json<CreateUser>,
-) -> Result<Json<u64>, StatusCode> {
-    match service::insert_user(&app_state.pool, user).await {
+) -> Result<Json<u64>, (StatusCode, String)> {
+    let is_user_exist = service::is_user_exist(&app_state.pool, &user.email)
+        .await
+        .map_err(|_| response::failed_with_message("Server Error".to_string()))?;
+
+    if is_user_exist {
+        return Err(response::failed_with_message(
+            "The user with this email already exists!".to_string(),
+        ));
+    }
+
+    match service::insert_user(&app_state.pool, &app_state.argon2_context, user).await {
         Ok(id) => Ok(response::success(id)),
-        Err(_) => Err(response::failed()),
+        Err(err) => Err(response::failed_with_message(format!(
+            "Server Error: {}",
+            err.to_string()
+        ))),
     }
 }
 

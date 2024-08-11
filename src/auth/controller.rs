@@ -20,7 +20,7 @@ pub async fn login_handler(
         return Err(AuthError::MissingCredentials);
     }
 
-    service::verify_user(&app_state.pool, &payload)
+    service::verify_user(&app_state.pool, &app_state.argon2_context, &payload)
         .await
         .map_err(|_| AuthError::IncorrectCredentials)?;
 

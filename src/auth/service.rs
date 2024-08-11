@@ -1,22 +1,30 @@
 use super::AuthPayload;
-use crate::user::User;
+use crate::{password_util, user::User};
 use sqlx::{MySql, Pool};
 
 pub async fn verify_user(
     pool: &Pool<MySql>,
+    argon2_context: &argon2::Argon2<'static>,
     auth_payload: &AuthPayload,
-) -> Result<User, sqlx::Error> {
+) -> Result<AuthPayload, sqlx::Error> {
     let user = sqlx::query_as!(
-        User,
+        AuthPayload,
         "
-        SELECT id, username, email, create_time, update_time FROM user 
-        WHERE email = ? AND password = ?
+        SELECT email, password FROM user 
+        WHERE email = ?
         ",
-        auth_payload.email,
-        auth_payload.password
+        auth_payload.email
     )
     .fetch_one(pool)
     .await?;
+
+    dbg!("{}", &user.password);
+
+    if user.password.starts_with("$argon2")
+        && password_util::verify(argon2_context, &auth_payload.password).is_ok()
+    {
+        return Ok(user);
+    }
 
     Ok(user)
 }

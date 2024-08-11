@@ -20,6 +20,7 @@ pub struct User {
 pub struct CreateUser {
     username: String,
     email: String,
+    password: String,
 }
 
 #[derive(Deserialize, Debug)]

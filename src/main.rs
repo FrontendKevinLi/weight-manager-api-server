@@ -21,6 +21,7 @@ use tracing::info_span;
 use tracing::Span;
 
 mod auth;
+mod password_util;
 mod response;
 mod user;
 mod user_weight_record;
@@ -29,6 +30,7 @@ mod weight_record;
 #[derive(Clone, Debug)]
 pub struct AppState {
     pub pool: Pool<MySql>,
+    pub argon2_context: argon2::Argon2<'static>,
 }
 
 #[tokio::main]
@@ -52,7 +54,12 @@ async fn main() {
         .await
         .unwrap_or_else(|err| panic!("Failed to connect to database: {}", err));
 
-    let app_state = AppState { pool };
+    let argon2_context = password_util::generate_argon2_context();
+
+    let app_state = AppState {
+        pool,
+        argon2_context,
+    };
 
     let app = Router::new()
         .nest("/auth", auth::generate_router())
