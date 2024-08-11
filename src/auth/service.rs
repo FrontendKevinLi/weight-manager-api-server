@@ -1,5 +1,5 @@
 use super::AuthPayload;
-use crate::{password_util, user::User};
+use crate::{password_util};
 use sqlx::{MySql, Pool};
 
 pub async fn verify_user(

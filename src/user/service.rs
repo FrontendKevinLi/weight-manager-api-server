@@ -4,7 +4,6 @@ use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
 use super::{CreateUser, DateRange, User};
 use crate::password_util;
-use argon2::{Argon2, PasswordHasher};
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {

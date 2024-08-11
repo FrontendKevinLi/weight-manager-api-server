@@ -16,7 +16,6 @@ use sqlx::ConnectOptions;
 use tokio::net::TcpListener;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::trace::TraceLayer;
-use tracing::debug_span;
 use tracing::info_span;
 use tracing::Span;
 
