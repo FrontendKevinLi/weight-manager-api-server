@@ -4,6 +4,7 @@ use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
 use super::{CreateUser, DateRange, User};
 use crate::password_util;
+use anyhow::Result;
 use sqlx::{MySql, Pool};
 
 pub async fn fetch_users(pool: &Pool<MySql>) -> Result<Vec<User>, sqlx::Error> {
@@ -50,7 +51,7 @@ pub async fn insert_user(
     pool: &Pool<MySql>,
     argon2_context: &argon2::Argon2<'static>,
     user: CreateUser,
-) -> Result<u64, sqlx::Error> {
+) -> Result<u64> {
     //TODO: Change to a correct error
     let hashed_password = password_util::hash(&argon2_context, &user.password)
         .map_err(|_| sqlx::Error::RowNotFound)?;

@@ -9,6 +9,7 @@ use axum::Router;
 use crate::response;
 use crate::user_weight_record::UserWeightRecord;
 use crate::weight_record::CreateWeightRecord;
+use crate::AppJson;
 use crate::AppState;
 
 use super::service;
@@ -51,7 +52,7 @@ async fn get_user_by_id(
 #[axum::debug_handler]
 async fn create_user(
     State(app_state): State<AppState>,
-    Json(user): Json<CreateUser>,
+    AppJson(user): AppJson<CreateUser>,
 ) -> Result<Json<u64>, (StatusCode, String)> {
     let is_user_exist = service::is_user_exist(&app_state.pool, &user.email)
         .await

@@ -5,6 +5,7 @@ use axum::body::Bytes;
 use axum::extract::MatchedPath;
 use axum::http::HeaderMap;
 use axum::http::Request;
+use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::Router;
 use dotenv::dotenv;
@@ -30,6 +31,48 @@ mod weight_record;
 pub struct AppState {
     pub pool: Pool<MySql>,
     pub argon2_context: argon2::Argon2<'static>,
+}
+
+#[derive(axum::extract::FromRequest)]
+#[from_request(via(axum::Json), rejection(AppError))]
+struct AppJson<T>(T);
+
+impl<T> IntoResponse for AppJson<T>
+where
+    axum::Json<T>: IntoResponse,
+{
+    fn into_response(self) -> Response {
+        axum::Json(self.0).into_response()
+    }
+}
+
+pub enum AppError {
+    JsonRejection(axum::extract::rejection::JsonRejection),
+    // TODO: implement: Some error from a third party library we're using
+    // TimeError(time_library::Error),
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        #[derive(serde::Serialize)]
+        struct ErrorMessage {
+            message: String,
+        }
+
+        let (status, message) = match self {
+            Self::JsonRejection(json_rejection) => {
+                (json_rejection.status(), json_rejection.body_text())
+            }
+        };
+
+        (status, AppJson(ErrorMessage { message })).into_response()
+    }
+}
+
+impl From<axum::extract::rejection::JsonRejection> for AppError {
+    fn from(rejection: axum::extract::rejection::JsonRejection) -> Self {
+        Self::JsonRejection(rejection)
+    }
 }
 
 #[tokio::main]
@@ -82,7 +125,8 @@ async fn main() {
                     info_span!(
                         "http_request",
                         method = ?request.method(),
-                        matched_path
+                        matched_path,
+                        error = tracing::field::Empty
                     )
                 })
                 .on_request(|_request: &Request<_>, _span: &Span| {
@@ -104,6 +148,7 @@ async fn main() {
                 .on_failure(
                     |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
                         // ...
+                        _span.record("error", _error.to_string());
                     },
                 ),
         );
