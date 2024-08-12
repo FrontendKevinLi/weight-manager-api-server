@@ -6,6 +6,7 @@ use axum::routing::{get, post, put};
 use axum::Json;
 use axum::Router;
 
+use crate::auth::Claims;
 use crate::response;
 use crate::user_weight_record::UserWeightRecord;
 use crate::weight_record::CreateWeightRecord;
@@ -29,7 +30,10 @@ pub fn generate_router() -> Router<AppState> {
 }
 
 #[axum::debug_handler]
-async fn get_users(State(app_state): State<AppState>) -> Result<AppJson<Vec<User>>, StatusCode> {
+async fn get_users(
+    State(app_state): State<AppState>,
+    _claims: Claims,
+) -> Result<AppJson<Vec<User>>, StatusCode> {
     match service::fetch_users(&app_state.pool).await {
         Ok(users) => Ok(response::success(users)),
         Err(_) => Err(response::failed()),
@@ -40,6 +44,7 @@ async fn get_users(State(app_state): State<AppState>) -> Result<AppJson<Vec<User
 async fn get_user_by_id(
     State(app_state): State<AppState>,
     Path(id): Path<i64>,
+    _claims: Claims,
 ) -> Result<AppJson<Option<User>>, (StatusCode, String)> {
     match service::fetch_users_by_id(&app_state.pool, id).await {
         Ok(user) => Ok(response::success(Option::from(user))),
