@@ -15,6 +15,7 @@ use crate::AppState;
 use super::service;
 use super::CreateUser;
 use super::DateRange;
+use super::UpdateUser;
 use super::User;
 
 pub fn generate_router() -> Router<AppState> {
@@ -28,7 +29,7 @@ pub fn generate_router() -> Router<AppState> {
 }
 
 #[axum::debug_handler]
-async fn get_users(State(app_state): State<AppState>) -> Result<Json<Vec<User>>, StatusCode> {
+async fn get_users(State(app_state): State<AppState>) -> Result<AppJson<Vec<User>>, StatusCode> {
     match service::fetch_users(&app_state.pool).await {
         Ok(users) => Ok(response::success(users)),
         Err(_) => Err(response::failed()),
@@ -39,7 +40,7 @@ async fn get_users(State(app_state): State<AppState>) -> Result<Json<Vec<User>>,
 async fn get_user_by_id(
     State(app_state): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<Json<Option<User>>, (StatusCode, String)> {
+) -> Result<AppJson<Option<User>>, (StatusCode, String)> {
     match service::fetch_users_by_id(&app_state.pool, id).await {
         Ok(user) => Ok(response::success(Option::from(user))),
         Err(err) => match err {
@@ -53,7 +54,7 @@ async fn get_user_by_id(
 async fn create_user(
     State(app_state): State<AppState>,
     AppJson(user): AppJson<CreateUser>,
-) -> Result<Json<u64>, (StatusCode, String)> {
+) -> Result<AppJson<u64>, (StatusCode, String)> {
     let is_user_exist = service::is_user_exist(&app_state.pool, &user.email)
         .await
         .map_err(|_| response::failed_with_message("Server Error".to_string()))?;
@@ -77,8 +78,8 @@ async fn create_user(
 async fn update_user(
     State(app_state): State<AppState>,
     Path(id): Path<u64>,
-    Json(user): Json<CreateUser>,
-) -> Result<Json<u64>, StatusCode> {
+    AppJson(user): AppJson<UpdateUser>,
+) -> Result<AppJson<u64>, StatusCode> {
     match service::update_user(&app_state.pool, user, id).await {
         Ok(id) => Ok(response::success(id)),
         Err(_) => Err(response::failed()),
@@ -89,9 +90,8 @@ async fn get_weight_record_by_user_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<u64>,
     date_range: Option<Query<DateRange>>,
-) -> Result<Json<Vec<UserWeightRecord>>, StatusCode> {
+) -> Result<AppJson<Vec<UserWeightRecord>>, StatusCode> {
     let Query(date_range) = date_range.unwrap_or_default();
-    dbg!(&date_range);
 
     match service::fetch_weight_record_by_user_id(&app_state.pool, user_id, date_range).await {
         Ok(records) => Ok(response::success(records)),
@@ -102,8 +102,8 @@ async fn get_weight_record_by_user_id(
 async fn create_weight_record_by_user_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<u64>,
-    Json(weight_record): Json<CreateWeightRecord>,
-) -> Result<Json<u64>, StatusCode> {
+    AppJson(weight_record): AppJson<CreateWeightRecord>,
+) -> Result<AppJson<u64>, StatusCode> {
     match service::create_weight_record_by_user_id(&app_state.pool, user_id, weight_record).await {
         Ok(id) => Ok(response::success(id)),
         Err(_) => Err(response::failed()),

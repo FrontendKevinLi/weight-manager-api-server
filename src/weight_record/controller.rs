@@ -1,5 +1,5 @@
 use super::{service, WeightRecord};
-use crate::{response, AppState};
+use crate::{response, AppJson, AppState};
 use axum::extract::State;
 use axum::routing::get;
 use axum::{http::StatusCode, Json, Router};
@@ -12,7 +12,7 @@ pub fn generate_router() -> Router<AppState> {
 #[axum::debug_handler]
 async fn get_weight_records(
     State(app_state): State<AppState>,
-) -> Result<Json<Vec<WeightRecord>>, StatusCode> {
+) -> Result<AppJson<Vec<WeightRecord>>, StatusCode> {
     match service::fetch_weight_records(&app_state.pool).await {
         Ok(weight_records) => Ok(response::success(weight_records)),
         Err(_) => Err(response::failed()),

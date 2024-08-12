@@ -1,4 +1,4 @@
-use crate::AppState;
+use crate::{AppJson, AppState};
 use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -14,7 +14,7 @@ pub fn generate_router() -> Router<AppState> {
 #[axum::debug_handler]
 pub async fn login_handler(
     State(app_state): State<AppState>,
-    Json(payload): Json<AuthPayload>,
+    AppJson(payload): AppJson<AuthPayload>,
 ) -> Result<Json<AuthBody>, AuthError> {
     if payload.email.is_empty() || payload.password.is_empty() {
         return Err(AuthError::MissingCredentials);

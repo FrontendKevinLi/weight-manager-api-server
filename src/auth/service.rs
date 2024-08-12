@@ -1,5 +1,5 @@
 use super::AuthPayload;
-use crate::{password_util};
+use crate::password_util;
 use sqlx::{MySql, Pool};
 
 pub async fn verify_user(
@@ -17,8 +17,6 @@ pub async fn verify_user(
     )
     .fetch_one(pool)
     .await?;
-
-    dbg!("{}", &user.password);
 
     if user.password.starts_with("$argon2")
         && password_util::verify(argon2_context, &auth_payload.password).is_ok()

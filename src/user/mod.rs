@@ -23,6 +23,12 @@ pub struct CreateUser {
     password: String,
 }
 
+#[derive(Deserialize)]
+pub struct UpdateUser {
+    username: String,
+    email: String,
+}
+
 #[derive(Deserialize, Debug)]
 pub struct DateRange {
     start_date: String,

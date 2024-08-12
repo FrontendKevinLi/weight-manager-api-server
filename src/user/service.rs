@@ -2,7 +2,7 @@ use crate::user_weight_record::UserWeightRecord;
 use crate::weight_record;
 use crate::{user_weight_record, weight_record::CreateWeightRecord};
 
-use super::{CreateUser, DateRange, User};
+use super::{CreateUser, DateRange, UpdateUser, User};
 use crate::password_util;
 use anyhow::Result;
 use sqlx::{MySql, Pool};
@@ -70,7 +70,7 @@ pub async fn insert_user(
 
 pub async fn update_user(
     pool: &Pool<MySql>,
-    user: CreateUser,
+    user: UpdateUser,
     id: u64,
 ) -> Result<u64, sqlx::Error> {
     let result = sqlx::query!(

@@ -2,8 +2,10 @@ use axum::http::StatusCode;
 use axum::Json;
 use serde::Serialize;
 
-pub fn success<TData: Serialize>(data: TData) -> Json<TData> {
-    Json(data)
+use crate::AppJson;
+
+pub fn success<TData: Serialize>(data: TData) -> AppJson<TData> {
+    AppJson(data)
 }
 
 pub fn failed() -> StatusCode {

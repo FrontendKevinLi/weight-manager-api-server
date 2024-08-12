@@ -17,6 +17,7 @@ use sqlx::ConnectOptions;
 use tokio::net::TcpListener;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::trace::TraceLayer;
+use tracing::error;
 use tracing::info_span;
 use tracing::Span;
 
@@ -61,7 +62,11 @@ impl IntoResponse for AppError {
 
         let (status, message) = match self {
             Self::JsonRejection(json_rejection) => {
-                (json_rejection.status(), json_rejection.body_text())
+                error!("{}", json_rejection.body_text());
+                (
+                    json_rejection.status(),
+                    "Error during serializing".to_string(),
+                )
             }
         };
 
