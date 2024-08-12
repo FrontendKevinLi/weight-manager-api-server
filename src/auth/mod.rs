@@ -4,7 +4,7 @@ use axum::{
 };
 use axum_extra::headers::authorization::Bearer;
 use axum_extra::{headers::Authorization, TypedHeader};
-use jsonwebtoken::{DecodingKey, EncodingKey};
+use jsonwebtoken::{DecodingKey, EncodingKey, TokenData};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
@@ -56,9 +56,14 @@ where
             .map_err(|_| AuthError::InvalidToken)?;
         let token = header.0.token();
 
-        let token_data =
+        let token_data: TokenData<Claims> =
             jsonwebtoken::decode(token, &KEYS.decoding, &jsonwebtoken::Validation::default())
                 .map_err(|_| AuthError::InvalidToken)?;
+
+        let exp = i64::try_from(token_data.claims.exp).map_err(|_| AuthError::TokenExpiration)?;
+        if exp < chrono::Utc::now().timestamp() {
+            return Err(AuthError::TokenExpiration);
+        }
 
         Ok(token_data.claims)
     }
@@ -88,6 +93,7 @@ pub enum AuthError {
     MissingCredentials,
     TokenCreation,
     IncorrectCredentials,
+    TokenExpiration,
 }
 
 impl IntoResponse for AuthError {
@@ -97,6 +103,7 @@ impl IntoResponse for AuthError {
             Self::MissingCredentials => (StatusCode::BAD_REQUEST, "Missing credentials"),
             Self::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
             Self::IncorrectCredentials => (StatusCode::BAD_REQUEST, "Incorrect credentials"),
+            Self::TokenExpiration => (StatusCode::UNAUTHORIZED, "Credential expired"),
         };
 
         (status_code).into_response()

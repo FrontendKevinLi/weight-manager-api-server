@@ -24,9 +24,11 @@ pub async fn login_handler(
         .await
         .map_err(|_| AuthError::IncorrectCredentials)?;
 
+    let exp = jsonwebtoken::get_current_timestamp() + 60 * 60 * 24;
+
     let claims = Claims {
         email: payload.email,
-        exp: jsonwebtoken::get_current_timestamp() + 3600 * 1000,
+        exp: exp.clone(),
     };
 
     let token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claims, &KEYS.encoding)
