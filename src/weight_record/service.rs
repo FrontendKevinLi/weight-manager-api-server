@@ -1,5 +1,4 @@
 use super::{CreateWeightRecord, WeightRecord};
-use crate::user_weight_record::insert_user_weight_record;
 use sqlx::{Executor, MySql, Pool};
 
 pub async fn fetch_weight_records(pool: &Pool<MySql>) -> Result<Vec<WeightRecord>, sqlx::Error> {

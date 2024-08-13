@@ -5,6 +5,7 @@ use axum::body::Bytes;
 use axum::extract::MatchedPath;
 use axum::http::HeaderMap;
 use axum::http::Request;
+use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::Router;
 use dotenv::dotenv;
@@ -16,11 +17,12 @@ use sqlx::ConnectOptions;
 use tokio::net::TcpListener;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::trace::TraceLayer;
-use tracing::debug_span;
+use tracing::error;
 use tracing::info_span;
 use tracing::Span;
 
 mod auth;
+mod password_util;
 mod response;
 mod user;
 mod user_weight_record;
@@ -29,6 +31,53 @@ mod weight_record;
 #[derive(Clone, Debug)]
 pub struct AppState {
     pub pool: Pool<MySql>,
+    pub argon2_context: argon2::Argon2<'static>,
+}
+
+#[derive(axum::extract::FromRequest)]
+#[from_request(via(axum::Json), rejection(AppError))]
+struct AppJson<T>(T);
+
+impl<T> IntoResponse for AppJson<T>
+where
+    axum::Json<T>: IntoResponse,
+{
+    fn into_response(self) -> Response {
+        axum::Json(self.0).into_response()
+    }
+}
+
+pub enum AppError {
+    JsonRejection(axum::extract::rejection::JsonRejection),
+    // TODO: implement: Some error from a third party library we're using
+    // TimeError(time_library::Error),
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        #[derive(serde::Serialize)]
+        struct ErrorMessage {
+            message: String,
+        }
+
+        let (status, message) = match self {
+            Self::JsonRejection(json_rejection) => {
+                error!("{}", json_rejection.body_text());
+                (
+                    json_rejection.status(),
+                    "Error during serializing".to_string(),
+                )
+            }
+        };
+
+        (status, AppJson(ErrorMessage { message })).into_response()
+    }
+}
+
+impl From<axum::extract::rejection::JsonRejection> for AppError {
+    fn from(rejection: axum::extract::rejection::JsonRejection) -> Self {
+        Self::JsonRejection(rejection)
+    }
 }
 
 #[tokio::main]
@@ -52,7 +101,12 @@ async fn main() {
         .await
         .unwrap_or_else(|err| panic!("Failed to connect to database: {}", err));
 
-    let app_state = AppState { pool };
+    let argon2_context = password_util::generate_argon2_context();
+
+    let app_state = AppState {
+        pool,
+        argon2_context,
+    };
 
     let app = Router::new()
         .nest("/auth", auth::generate_router())
@@ -76,7 +130,8 @@ async fn main() {
                     info_span!(
                         "http_request",
                         method = ?request.method(),
-                        matched_path
+                        matched_path,
+                        error = tracing::field::Empty
                     )
                 })
                 .on_request(|_request: &Request<_>, _span: &Span| {
@@ -98,6 +153,7 @@ async fn main() {
                 .on_failure(
                     |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
                         // ...
+                        _span.record("error", _error.to_string());
                     },
                 ),
         );

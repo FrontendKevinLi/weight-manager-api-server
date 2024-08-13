@@ -1,4 +1,4 @@
-use crate::AppState;
+use crate::{AppJson, AppState};
 use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -14,19 +14,21 @@ pub fn generate_router() -> Router<AppState> {
 #[axum::debug_handler]
 pub async fn login_handler(
     State(app_state): State<AppState>,
-    Json(payload): Json<AuthPayload>,
+    AppJson(payload): AppJson<AuthPayload>,
 ) -> Result<Json<AuthBody>, AuthError> {
     if payload.email.is_empty() || payload.password.is_empty() {
         return Err(AuthError::MissingCredentials);
     }
 
-    service::verify_user(&app_state.pool, &payload)
+    service::verify_user(&app_state.pool, &app_state.argon2_context, &payload)
         .await
         .map_err(|_| AuthError::IncorrectCredentials)?;
 
+    let exp = jsonwebtoken::get_current_timestamp() + 60 * 60 * 24;
+
     let claims = Claims {
         email: payload.email,
-        exp: jsonwebtoken::get_current_timestamp() + 3600 * 1000,
+        exp: exp.clone(),
     };
 
     let token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claims, &KEYS.encoding)

@@ -20,6 +20,13 @@ pub struct User {
 pub struct CreateUser {
     username: String,
     email: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateUser {
+    username: String,
+    email: String,
 }
 
 #[derive(Deserialize, Debug)]
