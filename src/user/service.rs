@@ -75,7 +75,7 @@ pub async fn fetch_weight_record_by_user_id(
     let records = sqlx::query_as!(
         UserWeightRecord,
         "
-        select 
+        select
             user_weight_record.id as id,
             user.id as user_id,
             user.username as username,
@@ -86,6 +86,7 @@ pub async fn fetch_weight_record_by_user_id(
         join weight_record on user_weight_record.weight_record_id = weight_record.id
         where user_weight_record.user_id = ?
         and weight_record.date between ? and ?
+        order by weight_record.date asc
         ",
         user_id,
         date_range.start_date,
