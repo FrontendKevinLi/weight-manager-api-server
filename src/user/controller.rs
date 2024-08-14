@@ -58,6 +58,7 @@ async fn get_user_by_id(
 #[axum::debug_handler]
 async fn create_user(
     State(app_state): State<AppState>,
+    _claims: Claims,
     AppJson(user): AppJson<CreateUser>,
 ) -> Result<AppJson<u64>, (StatusCode, String)> {
     let is_user_exist = service::is_user_exist(&app_state.pool, &user.email)
@@ -83,6 +84,7 @@ async fn create_user(
 async fn update_user(
     State(app_state): State<AppState>,
     Path(id): Path<u64>,
+    _claims: Claims,
     AppJson(user): AppJson<UpdateUser>,
 ) -> Result<AppJson<u64>, StatusCode> {
     match service::update_user(&app_state.pool, user, id).await {
@@ -95,6 +97,7 @@ async fn get_weight_record_by_user_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<u64>,
     date_range: Option<Query<DateRange>>,
+    _claims: Claims,
 ) -> Result<AppJson<Vec<UserWeightRecord>>, StatusCode> {
     let Query(date_range) = date_range.unwrap_or_default();
 
@@ -107,6 +110,7 @@ async fn get_weight_record_by_user_id(
 async fn create_weight_record_by_user_id(
     State(app_state): State<AppState>,
     Path(user_id): Path<u64>,
+    _claims: Claims,
     AppJson(weight_record): AppJson<CreateWeightRecord>,
 ) -> Result<AppJson<u64>, StatusCode> {
     match service::create_weight_record_by_user_id(&app_state.pool, user_id, weight_record).await {
